@@ -1,32 +1,39 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 import { GoogleGenAI } from '@google/genai';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 dotenv.config();
 
 const DEVELOPER_EMAIL = process.env.DEVELOPER_EMAIL || 'pavanhalapeti75@gmail.com';
 
-// Configure mail transporter (reads environment variables, falling back to configured settings)
-const smtpConfig = {
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '465', 10),
-  secure: (process.env.SMTP_SECURE === 'true') || (process.env.SMTP_PORT === '465') || true,
-  auth: {
-    user: process.env.SMTP_USERNAME || 'pavanhalapeti75@gmail.com',
-    pass: process.env.SMTP_PASSWORD || 'pavan12345',
-  },
-};
+// Configure mail transporter only if explicit, valid credentials are provided in process.env
+const smtpUser = process.env.SMTP_USERNAME?.trim();
+const smtpPass = process.env.SMTP_PASSWORD?.trim();
+const smtpHost = process.env.SMTP_HOST?.trim() || 'smtp.gmail.com';
+const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
+const smtpSecure = process.env.SMTP_SECURE === 'true' || smtpPort === 465;
 
 let mailTransporter: any = null;
-const effectiveSmtpUser = process.env.SMTP_USERNAME || 'pavanhalapeti75@gmail.com';
-const effectiveSmtpPass = process.env.SMTP_PASSWORD || 'pavan12345';
 
-if (effectiveSmtpUser && effectiveSmtpPass) {
+// Only initialize live nodemailer transport if explicit real credentials exist in environment variables
+if (smtpUser && smtpPass && smtpPass !== 'pavan12345') {
   try {
-    mailTransporter = nodemailer.createTransport(smtpConfig);
+    mailTransporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
   } catch (err) {
     console.warn('Mail transporter initialization warning:', err);
   }
@@ -140,22 +147,22 @@ Notice: This security incident has been processed silently in the backend to pre
   `;
 
   let deliveryStatus = mailTransporter
-    ? `Delivered via configured SMTP to ${DEVELOPER_EMAIL}`
-    : `Logged in Developer Alerts Inbox (SMTP credentials not configured in environment)`;
+    ? `Dispatched via SMTP to ${DEVELOPER_EMAIL}`
+    : `Recorded in Developer Alerts Inbox (Waiting for SMTP App Password)`;
 
   if (mailTransporter) {
     try {
       await mailTransporter.sendMail({
-        from: '"Digital Defenders AI Agent" <security@digitaldefenders.sec>',
+        from: `"Digital Defenders AI Agent" <${smtpUser || 'security@digitaldefenders.sec'}>`,
         to: DEVELOPER_EMAIL,
         subject,
         text: textBody,
         html: htmlBody,
       });
-      deliveryStatus = `Successfully sent via SMTP to ${DEVELOPER_EMAIL}`;
+      deliveryStatus = `Successfully delivered via SMTP to ${DEVELOPER_EMAIL}`;
     } catch (mailErr: any) {
-      console.warn('SMTP delivery attempt error:', mailErr?.message);
-      deliveryStatus = `Captured in Developer Inbox (SMTP failed: ${mailErr?.message})`;
+      console.warn('SMTP delivery attempt note:', mailErr?.message);
+      deliveryStatus = `Captured in Developer Inbox (SMTP: ${mailErr?.message})`;
     }
   }
 
@@ -189,6 +196,15 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+
+// Root & health status endpoints
+app.get('/api', (req: Request, res: Response) => {
+  res.json({ status: 'ok', service: 'Digital Defenders Security API', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({ status: 'healthy', uptime: process.uptime() });
+});
 
 // Initialize Gemini SDK with User-Agent telemetry
 const apiKey = process.env.GEMINI_API_KEY || '';
@@ -1527,8 +1543,16 @@ async function startServer() {
   });
 }
 
-// Only start the standalone listener if not running in a serverless environment (e.g., Vercel)
-if (process.env.VERCEL !== '1') {
+// Only start the standalone listener if not running in a serverless environment (e.g., Vercel / AWS Lambda)
+const isServerless = Boolean(
+  process.env.VERCEL ||
+  process.env.VERCEL_ENV ||
+  process.env.NOW_REGION ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT
+);
+
+if (!isServerless) {
   startServer().catch((err) => {
     console.error('Failed to start server:', err);
   });

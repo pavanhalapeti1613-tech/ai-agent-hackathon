@@ -3,7 +3,6 @@ import {
   ShieldCheck,
   Cpu,
   Sparkles,
-  Play,
   RotateCcw,
   Zap,
   Lock,

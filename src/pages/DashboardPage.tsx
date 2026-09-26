@@ -1,29 +1,16 @@
 import React from 'react';
 import {
   ShieldAlert,
-  ShieldCheck,
   Activity,
   AlertTriangle,
   Ban,
-  TrendingUp,
-  Cpu,
+  CheckCircle2,
+  XCircle,
+  Bot,
   Zap,
+  ArrowRight,
+  TrendingUp,
 } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
 import { DashboardStats } from '../types/security';
 
 interface DashboardPageProps {
@@ -38,16 +25,6 @@ interface DashboardPageProps {
   isSimulating: boolean;
 }
 
-const RISK_COLORS: { [key: string]: string } = {
-  NORMAL: '#10b981',
-  WARNING: '#f59e0b',
-  SUSPICIOUS: '#f97316',
-  HIGH: '#ef4444',
-  CRITICAL: '#b91c1c',
-};
-
-const PIE_COLORS = ['#3b82f6', '#ef4444'];
-
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   stats,
   activityData,
@@ -55,278 +32,140 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   onRunCompleteAttack,
   isSimulating,
 }) => {
-  const cards = [
+  const statCards = [
     {
       title: 'Total Login Attempts',
       value: stats.totalAttempts,
-      change: 'Real-time ingress',
+      sub: `${stats.successfulLogins} successful, ${stats.failedLogins} failed`,
       icon: Activity,
-      color: 'text-slate-700 bg-slate-100',
+      color: 'text-blue-600 bg-blue-50 border-blue-200',
     },
     {
-      title: 'Successful Logins',
-      value: stats.successfulLogins,
-      change: 'Authorized sessions',
-      icon: ShieldCheck,
-      color: 'text-emerald-600 bg-emerald-50',
-    },
-    {
-      title: 'Failed Logins',
+      title: 'Failed Attempts',
       value: stats.failedLogins,
-      change: 'Authentication rejections',
-      icon: AlertTriangle,
-      color: 'text-rose-600 bg-rose-50',
+      sub: 'Ingress authentication failures',
+      icon: XCircle,
+      color: 'text-rose-600 bg-rose-50 border-rose-200',
     },
     {
-      title: 'Suspicious Attempts',
+      title: 'Suspicious Velocity',
       value: stats.suspiciousAttempts,
-      change: 'Threshold flagged',
-      icon: ShieldAlert,
-      color: 'text-amber-600 bg-amber-50',
+      sub: 'Exceeding risk thresholds',
+      icon: AlertTriangle,
+      color: 'text-amber-600 bg-amber-50 border-amber-200',
     },
     {
       title: 'Active Incidents',
       value: stats.activeIncidents,
-      change: 'Requires investigation',
-      icon: AlertTriangle,
-      color: 'text-rose-700 bg-rose-100',
+      sub: 'Requiring SOC action/approval',
+      icon: ShieldAlert,
+      color: 'text-purple-600 bg-purple-50 border-purple-200',
       action: () => onNavigateTab('incidents'),
     },
     {
-      title: 'Blocked IPs (Simulated)',
+      title: 'Blocked IPs',
       value: stats.blockedIps,
-      change: 'PostgreSQL defense',
+      sub: 'Simulated defense blacklist',
       icon: Ban,
-      color: 'text-purple-600 bg-purple-50',
+      color: 'text-slate-700 bg-slate-100 border-slate-200',
       action: () => onNavigateTab('blocked-ips'),
     },
   ];
 
-  const pieData = [
-    { name: 'Successful', value: stats.successfulLogins || 0 },
-    { name: 'Failed', value: stats.failedLogins || 0 },
-  ];
-
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
-      {/* Page Title & Hero Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-            Security Operations Dashboard
+      {/* Welcome & Simulation Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            Security Operations Center (SOC) Overview
           </h2>
-          <p className="text-xs text-slate-500 mt-1 font-mono">
-            Autonomous Detection Engine • TrueForge Agent Harness • Real-time Monitoring
+          <p className="text-xs text-slate-500">
+            Autonomous protection against brute-force and credential stuffing threats with Human-in-the-Loop verification.
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => onNavigateTab('monitor')}
-            className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
-          >
-            <Activity className="w-4 h-4 mr-1.5 text-slate-600" />
-            Login Monitor
-          </button>
-          <button
             onClick={() => onNavigateTab('agent')}
-            className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm shadow-blue-500/20"
+            className="py-2.5 px-4 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm flex items-center space-x-2"
           >
-            <Cpu className="w-4 h-4 mr-1.5 text-white" />
-            AI Agent Console
+            <Bot className="w-4 h-4" />
+            <span>Open AI Agent</span>
           </button>
         </div>
       </div>
 
-      {/* Summary Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {cards.map((card, i) => {
+      {/* Metric Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {statCards.map((card, idx) => {
           const Icon = card.icon;
           return (
             <div
-              key={i}
+              key={idx}
               onClick={card.action}
-              className={`bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs transition-all ${
-                card.action ? 'cursor-pointer hover:border-blue-400 hover:shadow-xs' : ''
+              className={`bg-white p-5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between ${
+                card.action ? 'cursor-pointer hover:border-slate-300 transition-colors' : ''
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  {card.title}
-                </span>
-                <div className={`p-1.5 rounded-lg ${card.color}`}>
+                <span className="text-xs font-semibold text-slate-600">{card.title}</span>
+                <div className={`p-2 rounded-lg border ${card.color}`}>
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-bold font-mono text-slate-900">
-                {card.value}
-              </div>
-              <div className="text-[11px] text-slate-400 mt-1">
-                {card.change}
+              <div>
+                <div className="text-2xl font-bold text-slate-900">{card.value}</div>
+                <div className="text-[11px] text-slate-400 mt-1">{card.sub}</div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Charts Grid */}
+      {/* Recent Traffic & Activity Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Chart 1: Failed Login Attempts Over Time */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">
-                Failed Login Attempts Over Time
-              </h3>
-              <p className="text-xs text-slate-500">
-                Temporal distribution of authentication anomalies
-              </p>
-            </div>
-            <TrendingUp className="w-4 h-4 text-blue-600" />
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center">
+              <TrendingUp className="w-4 h-4 mr-2 text-blue-600" />
+              Source IP Distribution
+            </h3>
+            <span className="text-xs text-slate-400">Failed attempts by origin</span>
           </div>
 
-          <div className="h-64 w-full">
-            {activityData.timeSeries.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={activityData.timeSeries}>
-                  <defs>
-                    <linearGradient id="colorFailed" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="time" tick={{ fontSize: 10 }} stroke="#94a3b8" />
-                  <YAxis tick={{ fontSize: 10 }} stroke="#94a3b8" />
-                  <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '8px' }} />
-                  <Area
-                    type="monotone"
-                    dataKey="failed"
-                    stroke="#ef4444"
-                    fillOpacity={1}
-                    fill="url(#colorFailed)"
-                    name="Failed Attempts"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+          <div className="space-y-2">
+            {activityData.ipDistribution.length === 0 ? (
+              <p className="text-xs text-slate-400 py-6 text-center">No telemetry recorded yet.</p>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-xs text-slate-400">
-                <Activity className="w-8 h-8 text-slate-300 mb-2" />
-                <span>No authentication events recorded yet. Ingress logins will chart here in real-time.</span>
-              </div>
+              activityData.ipDistribution.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg text-xs">
+                  <span className="font-mono font-medium text-slate-700">{item.ip}</span>
+                  <span className="font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                    {item.count} failures
+                  </span>
+                </div>
+              ))
             )}
           </div>
         </div>
 
-        {/* Chart 2: Failed Attempts by Source IP */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">
-                Failed Attempts by Source IP
-              </h3>
-              <p className="text-xs text-slate-500">
-                Attacker IP concentration & frequency
-              </p>
-            </div>
-            <Ban className="w-4 h-4 text-rose-600" />
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center">
+              <ShieldAlert className="w-4 h-4 mr-2 text-rose-600" />
+              Risk Level Classification
+            </h3>
+            <span className="text-xs text-slate-400">Assessed by Deterministic Engine</span>
           </div>
 
-          <div className="h-64 w-full">
-            {activityData.ipDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={activityData.ipDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="ip" tick={{ fontSize: 10, fontFamily: 'monospace' }} stroke="#94a3b8" />
-                  <YAxis tick={{ fontSize: 10 }} stroke="#94a3b8" />
-                  <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '8px' }} />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Failed Logins" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-xs text-slate-400">
-                <Ban className="w-8 h-8 text-slate-300 mb-2" />
-                <span>No failed attempts by IP yet.</span>
+          <div className="space-y-2">
+            {activityData.riskDistribution.map((item, idx) => (
+              <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg text-xs">
+                <span className="font-semibold text-slate-700">{item.name}</span>
+                <span className="font-bold text-slate-900">{item.value} IPs</span>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Chart 3: Successful vs Failed Logins */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">
-                Successful vs Failed Logins
-              </h3>
-              <p className="text-xs text-slate-500">
-                Proportion of valid vs rejected authentication attempts
-              </p>
-            </div>
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          </div>
-
-          <div className="h-60 w-full flex items-center justify-center">
-            {stats.totalAttempts > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '8px' }} />
-                  <Legend wrapperStyle={{ fontSize: '11px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-xs text-slate-400">No attempts logged yet.</div>
-            )}
-          </div>
-        </div>
-
-        {/* Chart 4: Risk Distribution Across Sources */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">
-                Risk Distribution
-              </h3>
-              <p className="text-xs text-slate-500">
-                Classification of active IPs across risk tiers
-              </p>
-            </div>
-            <ShieldAlert className="w-4 h-4 text-amber-600" />
-          </div>
-
-          <div className="h-60 w-full">
-            {activityData.riskDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={activityData.riskDistribution} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis type="number" tick={{ fontSize: 10 }} stroke="#94a3b8" />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} stroke="#94a3b8" width={80} />
-                  <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '8px' }} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                    {activityData.riskDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={RISK_COLORS[entry.name] || '#3b82f6'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                No risk data calculated yet.
-              </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
