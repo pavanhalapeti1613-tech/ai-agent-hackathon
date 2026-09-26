@@ -19,11 +19,10 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
-  const [sourceIp, setSourceIp] = useState('127.0.0.1');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
@@ -60,7 +59,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
     try {
       // Validate credentials on backend
-      const res = await api.login(username, password, sourceIp);
+      const res = await api.login(username, password);
       onLoginSuccess(res.user);
     } catch (err: any) {
       // Standard authentication failure message - no internal alert exposed on screen
@@ -88,28 +87,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             Digital Defenders
           </h1>
           <p className="text-xs text-blue-400 font-mono tracking-wider mt-0.5">
-            AI Incident Response Agent
+            Enterprise Security Portal
           </p>
-        </div>
-
-        {/* DEMO MODE Box */}
-        <div className="bg-blue-50/70 border-b border-blue-100 p-4">
-          <div className="flex items-start space-x-2.5">
-            <Cpu className="w-4 h-4 text-blue-700 mt-0.5 shrink-0" />
-            <div className="text-xs">
-              <span className="font-bold text-blue-900 block uppercase tracking-wide text-[10px]">
-                DEMO MODE
-              </span>
-              <p className="text-blue-800 mt-0.5">
-                Demo credentials (for local demonstration only):
-              </p>
-              <div className="mt-1.5 flex items-center space-x-3 font-mono text-[11px] bg-white/80 px-2.5 py-1 rounded border border-blue-200/60 text-slate-800">
-                <span>Username: <strong className="text-blue-900">admin</strong></span>
-                <span className="text-slate-300">|</span>
-                <span>Password: <strong className="text-blue-900">admin123</strong></span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Login Form */}
@@ -136,7 +115,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Username
+              Username / User ID
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -147,7 +126,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
+                placeholder="Enter user ID"
                 className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-800"
               />
             </div>
@@ -205,17 +184,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             disabled={isLoading}
             className="w-full py-2.5 px-4 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm shadow-blue-500/20 disabled:opacity-50"
           >
-            {isLoading ? 'Authenticating...' : 'Login'}
+            {isLoading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
 
         {/* Footer info: silent backend AI protection */}
         <div className="bg-slate-50 p-3.5 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-          <span>Protected by AI Incident Agent (Backend)</span>
+          <span>Protected by AI Incident Agent</span>
           <button
             onClick={() => setShowDeveloperMailModal(true)}
             className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 font-medium"
-            title="Inspect developer email inbox"
+            title="Inspect developer email alerts"
           >
             <Mail className="w-3 h-3" />
             <span>Developer Alerts {developerEmails.length > 0 && `(${developerEmails.length})`}</span>
@@ -320,14 +299,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 space-y-3">
             <div className="flex items-center space-x-2 text-blue-600">
               <HelpCircle className="w-5 h-5" />
-              <h3 className="font-bold text-sm text-slate-900">Forgot Password</h3>
+              <h3 className="font-bold text-sm text-slate-900">Password Reset Request</h3>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              In this cybersecurity demonstration sandbox, account passwords are validated on the backend. Use the provided demo credentials:
+              To request a password reset, please contact your security administrator at <strong>{developerEmailAddress}</strong>.
             </p>
-            <div className="bg-slate-50 p-2.5 rounded font-mono text-xs text-slate-800 border border-slate-200">
-              admin / admin123
-            </div>
+            <p className="text-[11px] text-slate-500">
+              Security notice: Multiple unauthorized access attempts are monitored and recorded by the AI Incident Response Agent.
+            </p>
             <button
               onClick={() => setShowForgotPasswordModal(false)}
               className="w-full py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"

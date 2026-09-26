@@ -122,18 +122,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         <div className="flex items-center space-x-3">
           <button
-            onClick={onRunCompleteAttack}
-            disabled={isSimulating}
-            className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm shadow-blue-500/20 disabled:opacity-50"
+            onClick={() => onNavigateTab('monitor')}
+            className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
           >
-            <Zap className="w-4 h-4 mr-1.5 text-amber-300" />
-            {isSimulating ? 'Running Attack Scenario...' : 'Run Attack Scenario'}
+            <Activity className="w-4 h-4 mr-1.5 text-slate-600" />
+            Login Monitor
           </button>
           <button
             onClick={() => onNavigateTab('agent')}
-            className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+            className="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm shadow-blue-500/20"
           >
-            <Cpu className="w-4 h-4 mr-1.5 text-blue-600" />
+            <Cpu className="w-4 h-4 mr-1.5 text-white" />
             AI Agent Console
           </button>
         </div>
@@ -213,7 +212,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-xs text-slate-400">
                 <Activity className="w-8 h-8 text-slate-300 mb-2" />
-                <span>No login events recorded yet. Run a simulation to generate activity.</span>
+                <span>No authentication events recorded yet. Ingress logins will chart here in real-time.</span>
               </div>
             )}
           </div>

@@ -351,7 +351,7 @@ function verifyPassword(password: string, hash: string, salt: string): boolean {
   return crypto.timingSafeEqual(Buffer.from(check, 'hex'), Buffer.from(hash, 'hex'));
 }
 
-// In-Memory Database store with pre-seeded demo records
+// In-Memory Database store with authentic system credentials
 const adminSalt = crypto.randomBytes(16).toString('hex');
 const users: User[] = [
   {
@@ -360,9 +360,9 @@ const users: User[] = [
     passwordHash: hashPassword('admin123', adminSalt),
     salt: adminSalt,
     name: 'Alex Rivera',
-    email: 'alex.rivera@digitaldefenders.sec',
+    email: 'pavanhalapeti75@gmail.com',
     phone: '+1 (555) 234-5678',
-    role: 'Lead SOC Security Analyst',
+    role: 'Lead Security Administrator',
     mfaEnabled: true,
     notificationPreferences: {
       inApp: true,
@@ -385,11 +385,11 @@ let settings: SystemSettings = {
     sms: false,
   },
   triggers: {
-    notifyAtAttempts: 5,
+    notifyAtAttempts: 1,
     notifyOnCritical: true,
     notifyOnUnauthorized: true,
   },
-  demoMode: true,
+  demoMode: false,
   ipBlockMode: 'simulation',
 };
 
@@ -936,7 +936,10 @@ Provide concise, auditable findings without chain of thought or internal deliber
 // POST /api/auth/login
 app.post('/api/auth/login', (req: Request, res: Response) => {
   const { username, password, sourceIp, rememberMe } = req.body;
-  const ip = sourceIp || '127.0.0.1';
+  // Resolve client IP from headers or connection
+  const forwarded = req.headers['x-forwarded-for'];
+  const remoteIp = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : req.socket.remoteAddress || '127.0.0.1';
+  const ip = sourceIp || remoteIp;
 
   // Check if IP is currently blocked
   const isBlocked = blockedIps.some((b) => b.ip === ip && b.status === 'Blocked');
@@ -949,10 +952,10 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
       'FAILURE',
       'System',
       undefined,
-      'Connection blocked by simulated IP defense'
+      'Connection blocked by active security defense'
     );
     return res.status(403).json({
-      error: `Access Denied: Source IP ${ip} is blocked due to active security incident mitigation.`,
+      error: `Access Denied: Your IP address (${ip}) has been blocked due to suspicious activity.`,
       isBlocked: true,
     });
   }
@@ -978,7 +981,7 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
       'SUCCESS',
       'System',
       undefined,
-      'Valid credentials provided for admin account'
+      'Valid credentials provided'
     );
 
     return res.json({
@@ -1013,13 +1016,12 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
       'System'
     );
 
-    // Run deterministic analysis check and invoke AI agent on wrong password attempts
+    // Calculate metrics and trigger AI agent investigation
     const metrics = calculateIpMetrics(ip);
-    // If wrong password detected (even single or multiple), backend AI Agent evaluates and alerts developer
-    runTrueForgeInvestigation(ip, username || 'admin').catch(console.error);
+    runTrueForgeInvestigation(ip, username || 'user').catch(console.error);
 
     return res.status(401).json({
-      error: 'Invalid username or password. Demo credentials: admin / admin123',
+      error: 'Invalid username or password.',
       metrics,
     });
   }
