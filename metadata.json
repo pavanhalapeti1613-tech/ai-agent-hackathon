@@ -1,0 +1,6 @@
+{
+  "name": "Digital Defenders – AI Incident Response Agent",
+  "description": "Cybersecurity AI agent detecting brute force attacks, correlating authentication events, notifying account owners, and orchestrating human-approved simulated IP remediation with verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
