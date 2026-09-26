@@ -12,6 +12,26 @@ import {
 
 const API_BASE = '/api';
 
+async function parseJsonResponse(res: Response, fallbackError = 'Request failed') {
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    try {
+      return await res.json();
+    } catch {
+      // Ignore JSON parse error and fallback
+    }
+  }
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(text.startsWith('<') ? `${fallbackError} (Server returned ${res.status})` : (text || fallbackError));
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: text || fallbackError };
+  }
+}
+
 export const api = {
   // Auth
   login: async (username: string, password: string, sourceIp?: string) => {
@@ -20,27 +40,27 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password, sourceIp }),
     });
-    const data = await res.json();
+    const data = await parseJsonResponse(res, 'Authentication failed');
     if (!res.ok) throw new Error(data.error || 'Authentication failed');
     return data;
   },
 
   logout: async () => {
     const res = await fetch(`${API_BASE}/auth/logout`, { method: 'POST' });
-    return res.json();
+    return parseJsonResponse(res);
   },
 
   // Dashboard
   getStats: async (): Promise<DashboardStats> => {
     const res = await fetch(`${API_BASE}/dashboard/stats`);
     if (!res.ok) throw new Error('Failed to fetch stats');
-    return res.json();
+    return parseJsonResponse(res, 'Failed to fetch stats');
   },
 
   getActivity: async () => {
     const res = await fetch(`${API_BASE}/dashboard/activity`);
     if (!res.ok) throw new Error('Failed to fetch activity');
-    return res.json();
+    return parseJsonResponse(res, 'Failed to fetch activity');
   },
 
   // Login Attempts
